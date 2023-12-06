@@ -30,10 +30,17 @@
         .active {
             background: black;
         }
+
+        button{
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
     </style>
+    <script src="src/dsp_js/dsp.js"></script>
 </head>
 
 <body>
+    <button onclick="deafenMe()">Play waveform</button>
 </body>
 <script>
     'use strict'
@@ -60,13 +67,60 @@
         cellElement.classList.add("active")
     }
 
+    function getRowAndCol(cellElement) {
+        var col = [...cellElement.parentElement.childNodes].indexOf(cellElement)
+        var row = [...cellElement.parentElement.parentElement.childNodes].indexOf(cellElement.parentElement)
+        return { "col": col, "row": row }
+    }
+
+    function deafenMe() {
+        fft.forward(getWaveformArray())
+        var real = fft.real
+        var imag = fft.imag
+        
+        ctx = new AudioContext()
+        osc = ctx.createOscillator()
+        const wave = ctx.createPeriodicWave(real, imag, { disableNormalization: true });
+
+        osc.setPeriodicWave(wave);
+
+        osc.connect(ctx.destination);
+
+        osc.start();
+        osc.stop(2);
+    }
+
+    function getWaveformArray(){
+        var waveformArray = [...theGrid.getElementsByClassName("active")].map(x => getRowAndCol(x))
+        var waveformObj = {}
+        
+        waveformArray.forEach(x =>
+            waveformObj[x.col] = x.row / arrayHeight
+        )
+
+        return rightPadArray([...Object.values(waveformObj)], arrayWidth)
+    }
+
+    function rightPadArray(inputArray, targetLength){
+        var returnArray = inputArray
+        while (returnArray.length < targetLength){
+            returnArray.push(0)
+        }
+        return returnArray
+    }
+
     function init() {
-        initGrid(64, 64)
+        initGrid(arrayWidth, arrayHeight)
         theGrid = document.getElementById("theGrid")
     }
 
     // globals
     var theGrid
+    var ctx
+    var osc
+    var arrayWidth = 128
+    var arrayHeight = 64
+    var fft = new FFT(arrayWidth, 44100)
 
     init()
 

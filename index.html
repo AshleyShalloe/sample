@@ -128,8 +128,12 @@
 
 <body>
     <div class="card">
+        <p>Draw a waveform, play it.</p>
+        <p>At least I think that's what my code does...</p>
+    </div>
+    <div class="card">
         <button class="skeuButton" onclick="deafenMe()">Play waveform</button>
-        <input type="number" min="0.1" max="1.0" step="0.1" value="0.25" onchange="volume = this.value"></input>
+        Volume: <input type="number" min="0.1" max="1.0" step="0.1" value="0.25" onchange="volume = this.value"></input>
         <button class="skeuButton" onclick="doClear()">Clear</button>
     </div>
     <div class="card" id="gridContainer">

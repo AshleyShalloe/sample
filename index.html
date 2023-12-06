@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <style>
+        html {
+            font-family: Arial, sans-serif;
+        }
+
+        table,
+        td,
+        tr {
+            border-collapse: collapse;
+            border-spacing: 0;
+            padding: 0;
+            margin: 0;
+        }
+
+        td {
+            width: 5px;
+            height: 5px;
+        }
+
+        table {
+            border: 1px solid black;
+        }
+
+        .active {
+            background: black;
+        }
+    </style>
+</head>
+
+<body>
+</body>
+<script>
+    'use strict'
+
+    function initGrid(x, y) {
+        var tableElm = document.createElement("table")
+        tableElm.id = "theGrid"
+        tableElm.innerHTML = ("<tr>" + "<td></td>".repeat(x) + "</tr>").repeat(y)
+        document.body.appendChild(tableElm)
+
+        tableElm.querySelectorAll("td").forEach(x =>
+            x.setAttribute("onmouseover", "theCellEvent(this)")
+        )
+    }
+
+    function theCellEvent(cellElement) {
+        var currentCellId = [...cellElement.parentElement.childNodes].indexOf(cellElement)
+        for (var i = 0; i < theGrid.rows.length; i++) {
+            var tempCellElement = theGrid.rows[i].cells[currentCellId]
+            if (tempCellElement.classList.contains("active")) {
+                tempCellElement.classList.remove("active")
+            }
+        }
+        cellElement.classList.add("active")
+    }
+
+    function init() {
+        initGrid(64, 64)
+        theGrid = document.getElementById("theGrid")
+    }
+
+    // globals
+    var theGrid
+
+    init()
+
+</script>
+
+</html>

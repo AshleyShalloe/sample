@@ -4,10 +4,58 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8" />
+    <title>Sample</title>
     <style>
         html {
             font-family: Arial, sans-serif;
+            background: #e6e7e8;
         }
+
+        body {
+            margin: 0 auto;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-content: center;
+            justify-content: center;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-shadow: 5px 5px 5px lightgrey;
+            position: relative;
+            border-radius: 0.4em;
+        }
+
+        .card_hidden {
+            height: 5px !important;
+            overflow-y: hidden;
+        }
+
+        .card_hide_toggle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 1em;
+            height: 1em;
+            margin: 3px;
+            background: lightgray;
+            border-radius: 25% 25% 25% 100%;
+            line-height: 1em;
+        }
+
+        .card_hidden>div {
+            filter: opacity(0.1);
+        }
+
+        .card_hidden>.card_hide_toggle {
+            background: grey;
+        }
+
 
         table,
         td,
@@ -31,16 +79,61 @@
             background: black;
         }
 
-        button{
-            margin-top: 30px;
-            margin-bottom: 30px;
+        button {
+            margin: 3px;
+        }
+
+        .skeuButton {
+            background: white;
+            color: black;
+            box-shadow: 2px 2px 4px #80808080, -2px -2px 4px #ffffff6b;
+            border-radius: 0.4em;
+            border: 1px solid rgb(237, 237, 237);
+            transition: border 0.5s;
+            cursor: pointer;
+            user-select: none;
+            padding: 7px;
+        }
+
+        .skeuButton:active {
+            color: darkblue;
+            box-shadow: inset 2px 2px 4px #80808080, inset -2px -2px 4px #ffffff6b;
+        }
+
+        .skeuButton:disabled {
+            color: lightgray;
+        }
+
+        .skeuButton:hover {
+            border: 1px solid rgb(217, 217, 217);
+        }
+
+
+        select,
+        input {
+            background: white;
+            color: black;
+            box-shadow: 2px 2px 4px #80808080, -2px -2px 4px #ffffff6b;
+            border-radius: 0.4em;
+            border: 1px solid rgb(237, 237, 237);
+            transition: border 0.5s;
+            cursor: pointer;
+            user-select: none;
+            padding: 7px;
+            margin: 3px;
         }
     </style>
     <script src="src/dsp_js/dsp.js"></script>
 </head>
 
 <body>
-    <button onclick="deafenMe()">Play waveform</button>
+    <div class="card">
+        <button class="skeuButton" onclick="deafenMe()">Play waveform</button>
+        <input type="number" min="0.1" max="1.0" step="0.1" value="0.25" onchange="volume = this.value"></input>
+        <button class="skeuButton" onclick="doClear()">Clear</button>
+    </div>
+    <div class="card" id="gridContainer">
+    </div>
 </body>
 <script>
     'use strict'
@@ -49,7 +142,7 @@
         var tableElm = document.createElement("table")
         tableElm.id = "theGrid"
         tableElm.innerHTML = ("<tr>" + "<td></td>".repeat(x) + "</tr>").repeat(y)
-        document.body.appendChild(tableElm)
+        document.getElementById("gridContainer").appendChild(tableElm)
 
         tableElm.querySelectorAll("td").forEach(x =>
             x.setAttribute("onmouseover", "theCellEvent(this)")
@@ -77,23 +170,26 @@
         fft.forward(getWaveformArray())
         var real = fft.real
         var imag = fft.imag
-        
+
         ctx = new AudioContext()
+        mainGainNode = ctx.createGain();
+        mainGainNode.connect(ctx.destination);
+        mainGainNode.gain.value = volume;
         osc = ctx.createOscillator()
         const wave = ctx.createPeriodicWave(real, imag, { disableNormalization: true });
 
         osc.setPeriodicWave(wave);
 
-        osc.connect(ctx.destination);
+        osc.connect(mainGainNode);
 
         osc.start();
         osc.stop(2);
     }
 
-    function getWaveformArray(){
+    function getWaveformArray() {
         var waveformArray = [...theGrid.getElementsByClassName("active")].map(x => getRowAndCol(x))
         var waveformObj = {}
-        
+
         waveformArray.forEach(x =>
             waveformObj[x.col] = x.row / arrayHeight
         )
@@ -101,12 +197,18 @@
         return rightPadArray([...Object.values(waveformObj)], arrayWidth)
     }
 
-    function rightPadArray(inputArray, targetLength){
+    function rightPadArray(inputArray, targetLength) {
         var returnArray = inputArray
-        while (returnArray.length < targetLength){
+        while (returnArray.length < targetLength) {
             returnArray.push(0)
         }
         return returnArray
+    }
+
+    function doClear(){
+        document.querySelectorAll("#theGrid td.active").forEach(x =>
+            x.classList.remove("active")
+        )
     }
 
     function init() {
@@ -118,9 +220,11 @@
     var theGrid
     var ctx
     var osc
+    var mainGainNode
     var arrayWidth = 128
     var arrayHeight = 64
     var fft = new FFT(arrayWidth, 44100)
+    var volume = 0.25
 
     init()
 
